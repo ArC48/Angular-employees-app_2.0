@@ -1,4 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ApiService } from 'src/app/shared/api.service';
+import { loggedService } from 'src/app/shared/logged.service';
+import { EmployeeModel } from '../user-dashboard-interface';
 
 @Component({
   selector: 'app-user',
@@ -7,9 +10,41 @@ import { Component, OnInit } from '@angular/core';
 })
 export class UserComponent implements OnInit {
 
-  constructor() { }
+  @Input() EmployeeData: EmployeeModel[] = []
+  @Output() employee =  new EventEmitter<EmployeeModel>();
+
+
+  // --- pagination ---//
+  page: number = 1;
+  itemPerPages: number = 8;
+  currentUser: any;
+
+
+  constructor(private _api: ApiService,private authentification: loggedService) { }
 
   ngOnInit(): void {
+    this.getAllEmploee()
   }
 
+  getAllEmploee(){
+    this._api.Get_Data_From_Server()
+    .subscribe(res=>{
+      this.currentUser = this.authentification.loggedUser
+      this.EmployeeData = res
+      
+    })
+  }
+  Delete_Employee(employee: EmployeeModel){
+    var answer =  confirm(`Are you sure you want to continue?`)
+    if(answer){
+      this._api.Delete_Data_To_Server(employee.id)
+      .subscribe(res=>{
+        this.getAllEmploee()
+      })
+    }
+
+  }
+  Edit_Employee(employee: EmployeeModel){
+    this.employee.emit(employee)
+  }
 }
